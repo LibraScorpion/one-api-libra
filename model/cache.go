@@ -253,3 +253,17 @@ func CacheGetRandomSatisfiedChannel(group string, model string, ignoreFirstPrior
 	}
 	return channels[idx], nil
 }
+
+// CacheGetSatisfiedChannels 获取所有满足条件的渠道（不随机选择）
+func CacheGetSatisfiedChannels(group string, model string) ([]*Channel, error) {
+	if !config.MemoryCacheEnabled {
+		return GetSatisfiedChannels(group, model)
+	}
+	channelSyncLock.RLock()
+	defer channelSyncLock.RUnlock()
+	channels := group2model2channels[group][model]
+	if len(channels) == 0 {
+		return nil, errors.New("channel not found")
+	}
+	return channels, nil
+}

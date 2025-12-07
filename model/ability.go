@@ -110,3 +110,35 @@ func GetGroupModels(ctx context.Context, group string) ([]string, error) {
 	sort.Strings(models)
 	return models, err
 }
+
+func GetSatisfiedChannels(group string, model string) ([]*Channel, error) {
+	groupCol := "`group`"
+	trueVal := "1"
+	if common.UsingPostgreSQL {
+		groupCol = `"group"`
+		trueVal = "true"
+	}
+
+	var abilities []Ability
+	err := DB.Where(groupCol+" = ? and model = ? and enabled = "+trueVal, group, model).Find(&abilities).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(abilities) == 0 {
+		return nil, nil
+	}
+
+	channelIds := make([]int, len(abilities))
+	for i, ability := range abilities {
+		channelIds[i] = ability.ChannelId
+	}
+
+	var channels []*Channel
+	err = DB.Where("id IN (?)", channelIds).Find(&channels).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return channels, nil
+}

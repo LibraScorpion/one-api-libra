@@ -19,6 +19,7 @@ import (
 	"github.com/songquanpeng/one-api/controller"
 	"github.com/songquanpeng/one-api/middleware"
 	"github.com/songquanpeng/one-api/model"
+	smartRouter "github.com/songquanpeng/one-api/pkg/router"
 	"github.com/songquanpeng/one-api/relay/adaptor/openai"
 	"github.com/songquanpeng/one-api/router"
 )
@@ -46,6 +47,14 @@ func main() {
 	err = model.CreateRootAccountIfNeed()
 	if err != nil {
 		logger.FatalLog("database init error: " + err.Error())
+	}
+
+	// Initialize model pricing cache
+	err = model.InitModelPricingCache()
+	if err != nil {
+		logger.SysLog("warning: failed to init model pricing cache: " + err.Error())
+	} else {
+		logger.SysLog("model pricing cache initialized")
 	}
 	defer func() {
 		err := model.CloseDB()
@@ -90,6 +99,9 @@ func main() {
 	}
 	if config.EnableMetric {
 		logger.SysLog("metric enabled, will disable channel if too much request failed")
+	}
+	if err := smartRouter.InitRouter(); err != nil {
+		logger.SysLog("smart router init failed, fallback to random: " + err.Error())
 	}
 	openai.InitTokenEncoders()
 	client.Init()

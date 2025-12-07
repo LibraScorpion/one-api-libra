@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/songquanpeng/one-api/controller"
 	"github.com/songquanpeng/one-api/middleware"
+	smartRouter "github.com/songquanpeng/one-api/pkg/router"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +19,12 @@ func SetRelayRouter(router *gin.Engine) {
 		modelsRouter.GET("/:model", controller.RetrieveModel)
 	}
 	relayV1Router := router.Group("/v1")
-	relayV1Router.Use(middleware.RelayPanicRecover(), middleware.TokenAuth(), middleware.Distribute())
+	routerEngine := smartRouter.GetGlobalEngine()
+	if routerEngine != nil {
+		relayV1Router.Use(middleware.RelayPanicRecover(), middleware.TokenAuth(), middleware.SmartDistribute(routerEngine))
+	} else {
+		relayV1Router.Use(middleware.RelayPanicRecover(), middleware.TokenAuth())
+	}
 	{
 		relayV1Router.Any("/oneapi/proxy/:channelid/*target", controller.Relay)
 		relayV1Router.POST("/completions", controller.Relay)

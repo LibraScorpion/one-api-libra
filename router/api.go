@@ -117,5 +117,24 @@ func SetApiRouter(router *gin.Engine) {
 		{
 			groupRoute.GET("/", controller.GetGroups)
 		}
+
+		// 余额管理路由
+		balanceRoute := apiRouter.Group("/balance")
+		{
+			// 用户查询自己的余额和交易记录
+			balanceRoute.GET("/", middleware.UserAuth(), controller.GetUserBalance)
+			balanceRoute.GET("/transactions", middleware.UserAuth(), controller.GetUserBalanceTransactions)
+			// 管理员充值
+			balanceRoute.POST("/admin/add", middleware.AdminAuth(), controller.AdminAddBalance)
+		}
+
+		// 模型定价路由（公开）
+		modelRoute := apiRouter.Group("/models")
+		{
+			modelRoute.GET("/pricing", controller.GetAllModelPricings)
+			modelRoute.GET("/pricing/:model", controller.GetModelPricingDetail)
+			// 管理员更新定价
+			modelRoute.PUT("/pricing", middleware.AdminAuth(), controller.AdminUpdateModelPricing)
+		}
 	}
 }

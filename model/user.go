@@ -51,6 +51,12 @@ type User struct {
 	Group            string `json:"group" gorm:"type:varchar(32);default:'default'"`
 	AffCode          string `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
 	InviterId        int    `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
+	GoogleID         string `json:"google_id" gorm:"column:google_id;index"`
+	Avatar           string `json:"avatar" gorm:"column:avatar"`
+	Locale           string `json:"locale" gorm:"column:locale;default:'zh-CN'"`
+	EmailVerified    bool   `json:"email_verified" gorm:"column:email_verified;default:false"`
+	LastLoginAt      int64  `json:"last_login_at" gorm:"column:last_login_at;bigint"`
+	LastLoginIP      string `json:"last_login_ip" gorm:"column:last_login_ip;type:varchar(64)"`
 }
 
 func GetMaxUserId() int {
@@ -231,6 +237,19 @@ func (user *User) FillUserByEmail() error {
 	}
 	DB.Where(User{Email: user.Email}).First(user)
 	return nil
+}
+
+// GetUserByEmail returns a user by email or ErrRecordNotFound when missing.
+func GetUserByEmail(email string) (*User, error) {
+	if email == "" {
+		return nil, errors.New("email 为空！")
+	}
+	var user User
+	err := DB.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (user *User) FillUserByGitHubId() error {

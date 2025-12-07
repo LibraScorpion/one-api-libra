@@ -160,6 +160,16 @@ func migrateDB() error {
 	if err = DB.AutoMigrate(&Channel{}); err != nil {
 		return err
 	}
+	if err = DB.AutoMigrate(&CallMetadata{}); err != nil { // request metadata for routing/analysis
+		return err
+	}
+	// 新增：余额交易和模型定价表
+	if err = DB.AutoMigrate(&BalanceTransaction{}); err != nil {
+		return err
+	}
+	if err = DB.AutoMigrate(&ModelPricing{}); err != nil {
+		return err
+	}
 	return nil
 }
 
